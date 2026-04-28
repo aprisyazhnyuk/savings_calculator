@@ -1,3 +1,5 @@
+import matplotlib
+matplotlib.use("Agg")
 import datetime
 import matplotlib.pyplot as plt
 import streamlit as st
