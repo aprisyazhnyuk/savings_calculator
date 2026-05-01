@@ -27,35 +27,23 @@ daily_rate = rate / 100 / 365
 amount = initial_amount
 values = []
 dates = []
-daily_payouts = []
 
 start_date = date.today()
 
 for day in range(days):
-    payout = amount * daily_rate  # daily profit
-    amount += payout              # reinvest
+    amount *= (1 + daily_rate)
 
     current_date = start_date + timedelta(days=day)
-
-    # Format date in Russian style (DD.MM.YYYY)
     formatted_date = current_date.strftime("%d.%m.%Y")
 
     values.append(amount)
-    daily_payouts.append(payout)
     dates.append(formatted_date)
 
 # --- Data ---
 df = pd.DataFrame({
     "Дата": dates,
-    "Баланс": values,
-    "Ежедневный доход": daily_payouts
-})
-
-df = df.set_index("Дата")
+    "Баланс": values
+}).set_index("Дата")
 
 # --- Chart ---
-st.line_chart(df["Баланс"])
-
-# --- Optional: show payouts table ---
-with st.expander("Показать ежедневные выплаты"):
-    st.dataframe(df)
+st.line_chart(df)
