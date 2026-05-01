@@ -1,18 +1,27 @@
 import streamlit as st
 from datetime import date
+import pandas as pd
 
-st.title("My First Finance App")
+st.title("Savings Growth Simulator")
 
-# Show today's date
-today = date.today()
-st.write("Today's date is:", today)
+st.write("Today's date:", date.today())
 
-# User input
-initial_amount = st.number_input(
-    "Enter your starting amount:",
-    min_value=0.0,
-    value=1000.0,
-    step=100.0
-)
+initial_amount = st.number_input("Starting amount", value=1000.0)
+rate = st.number_input("Annual interest rate (%)", value=15.0)
+days = st.slider("Days to simulate", 1, 365, 30)
 
-st.write("Your starting amount is:", initial_amount)
+daily_rate = rate / 100 / 365
+
+amount = initial_amount
+values = []
+
+for day in range(days):
+    amount *= (1 + daily_rate)
+    values.append(amount)
+
+df = pd.DataFrame({
+    "Day": range(1, days + 1),
+    "Balance": values
+})
+
+st.line_chart(df.set_index("Day"))
