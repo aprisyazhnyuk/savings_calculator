@@ -11,20 +11,6 @@ target_amount = st.number_input(
     value=initial_amount * 2
 )
 
-period_option = st.selectbox(
-    "Период",
-    ["1 месяц", "3 месяца", "6 месяцев", "1 год"]
-)
-
-# --- Period mapping ---
-days_map = {
-    "1 месяц": 30,
-    "3 месяца": 90,
-    "6 месяцев": 180,
-    "1 год": 365
-}
-days = days_map[period_option]
-
 # --- Calculations ---
 daily_rate = rate / 100 / 365
 
@@ -35,8 +21,12 @@ dates = []
 start_date = date.today()
 
 hit_date = None
+hit_index = None
 
-for day in range(0, days + 1):
+day = 0
+
+# --- Simulate until target is reached ---
+while True:
     if day > 0:
         amount *= (1 + daily_rate)
 
@@ -47,14 +37,21 @@ for day in range(0, days + 1):
 
     if hit_date is None and amount >= target_amount:
         hit_date = current_date
+        hit_index = day
 
-# --- Build dataframe ---
+    # stop condition: reached target AND added 1 year after
+    if hit_date is not None and day >= hit_index + 365:
+        break
+
+    day += 1
+
+# --- DataFrame ---
 df = pd.DataFrame({
     "Дата": dates,
     "Баланс": values
 })
 
-# --- Add "stripe marker" column ---
+# --- Target marker column (fake vertical spike) ---
 df["Цель достигнута"] = None
 
 if hit_date:
@@ -67,4 +64,4 @@ st.line_chart(df.set_index("Дата"))
 if hit_date:
     st.success(f"Цель достигнута: {hit_date}")
 else:
-    st.warning("Цель не достигнута за выбранный период")
+    st.warning("Цель не достигнута в разумном горизонте")
