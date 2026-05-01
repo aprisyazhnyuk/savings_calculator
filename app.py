@@ -2,7 +2,7 @@ import streamlit as st
 from datetime import date, timedelta
 import pandas as pd
 
-# --- Inputs (Russian UI) ---
+# --- Inputs ---
 initial_amount = st.number_input("Начальная сумма", value=1000.0)
 rate = st.number_input("Годовая ставка (%)", value=15.0)
 
@@ -30,14 +30,17 @@ dates = []
 
 start_date = date.today()
 
-for day in range(days):
+# 👉 include today as starting point (important improvement)
+values.append(amount)
+dates.append(start_date)
+
+for day in range(1, days + 1):
     amount *= (1 + daily_rate)
 
     current_date = start_date + timedelta(days=day)
-    formatted_date = current_date.strftime("%d.%m.%Y")
 
     values.append(amount)
-    dates.append(formatted_date)
+    dates.append(current_date)
 
 # --- Data ---
 df = pd.DataFrame({
