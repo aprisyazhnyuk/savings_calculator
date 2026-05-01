@@ -1,7 +1,6 @@
 import streamlit as st
 from datetime import date, timedelta
 import pandas as pd
-import altair as alt
 
 # --- Inputs ---
 initial_amount = st.number_input("Начальная сумма", value=1000.0)
@@ -18,12 +17,13 @@ period_option = st.selectbox(
 )
 
 # --- Period mapping ---
-days = {
+days_map = {
     "1 месяц": 30,
     "3 месяца": 90,
     "6 месяцев": 180,
     "1 год": 365
-}[period_option]
+}
+days = days_map[period_option]
 
 # --- Calculations ---
 daily_rate = rate / 100 / 365
@@ -34,13 +34,11 @@ dates = []
 
 start_date = date.today()
 
-values.append(amount)
-dates.append(start_date)
-
 hit_date = None
 
-for day in range(1, days + 1):
-    amount *= (1 + daily_rate)
+for day in range(0, days + 1):
+    if day > 0:
+        amount *= (1 + daily_rate)
 
     current_date = start_date + timedelta(days=day)
 
@@ -50,31 +48,20 @@ for day in range(1, days + 1):
     if hit_date is None and amount >= target_amount:
         hit_date = current_date
 
-# --- Data ---
+# --- Build dataframe ---
 df = pd.DataFrame({
     "Дата": dates,
     "Баланс": values
 })
 
-# --- Base line ---
-line = alt.Chart(df).mark_line().encode(
-    x="Дата:T",
-    y="Баланс:Q"
-)
+# --- Add "stripe marker" column ---
+df["Цель достигнута"] = None
 
-# --- Vertical dashed target line ---
-rule = None
 if hit_date:
-    rule = alt.Chart(pd.DataFrame({"Дата": [hit_date]})).mark_rule(
-        strokeDash=[6, 4],
-        color="red"
-    ).encode(
-        x="Дата:T"
-    )
+    df.loc[df["Дата"] == hit_date, "Цель достигнута"] = target_amount
 
-chart = line + (rule if rule is not None else 0)
-
-st.altair_chart(chart, use_container_width=True)
+# --- Chart ---
+st.line_chart(df.set_index("Дата"))
 
 # --- Info ---
 if hit_date:
