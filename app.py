@@ -2,17 +2,16 @@ import streamlit as st
 from datetime import date, timedelta
 import pandas as pd
 
-# Inputs (in Russian)
+# --- Inputs (Russian UI) ---
 initial_amount = st.number_input("Начальная сумма", value=1000.0)
 rate = st.number_input("Годовая ставка (%)", value=15.0)
 
-# Preset period selection
 period_option = st.selectbox(
     "Период",
     ["1 месяц", "3 месяца", "6 месяцев", "1 год"]
 )
 
-# Convert period to days
+# --- Period mapping ---
 if period_option == "1 месяц":
     days = 30
 elif period_option == "3 месяца":
@@ -22,27 +21,41 @@ elif period_option == "6 месяцев":
 else:
     days = 365
 
-# Interest calculation
+# --- Calculations ---
 daily_rate = rate / 100 / 365
 
 amount = initial_amount
 values = []
 dates = []
+daily_payouts = []
 
 start_date = date.today()
 
 for day in range(days):
-    amount *= (1 + daily_rate)
-    values.append(amount)
-    dates.append(start_date + timedelta(days=day))
+    payout = amount * daily_rate  # daily profit
+    amount += payout              # reinvest
 
-# DataFrame with dates
+    current_date = start_date + timedelta(days=day)
+
+    # Format date in Russian style (DD.MM.YYYY)
+    formatted_date = current_date.strftime("%d.%m.%Y")
+
+    values.append(amount)
+    daily_payouts.append(payout)
+    dates.append(formatted_date)
+
+# --- Data ---
 df = pd.DataFrame({
     "Дата": dates,
-    "Баланс": values
+    "Баланс": values,
+    "Ежедневный доход": daily_payouts
 })
 
 df = df.set_index("Дата")
 
-# Plot
-st.line_chart(df)
+# --- Chart ---
+st.line_chart(df["Баланс"])
+
+# --- Optional: show payouts table ---
+with st.expander("Показать ежедневные выплаты"):
+    st.dataframe(df)
